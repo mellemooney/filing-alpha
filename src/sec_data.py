@@ -48,8 +48,8 @@ def download_company_facts(cik,headers,ticker):
         json.dump(raw_data, file, indent=2)
     
 
-
-download_company_facts(get_cik("AAPL",headers),headers,"AAPL")
+ticker = input("Enter Ticker: ")
+download_company_facts(get_cik(ticker,headers),headers,ticker)
 
 
 

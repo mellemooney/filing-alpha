@@ -1,2 +1,11 @@
+# Virtual environment
 .venv/
+
+# Raw downloaded data
 data/raw/
+
+# Processed data
+data/processed/
+
+# Environment variables / secrets
+.env
