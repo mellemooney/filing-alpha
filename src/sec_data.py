@@ -27,7 +27,8 @@ def get_cik(ticker,headers):
 
 
 
-def download_company_facts(cik,headers):
+def download_company_facts(cik,headers,ticker):
+    ticker = ticker.upper()
     url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
     response = requests.get(
             url,
@@ -36,20 +37,19 @@ def download_company_facts(cik,headers):
     response.raise_for_status()
 
     raw_data = response.json()
-    company_name = raw_data["entityName"]
-    safe_name = company_name.replace(' ','_').replace('/','_')
+    
 
     PROJECT_ROOT = Path(__file__).resolve().parents[1]
     output_folder = PROJECT_ROOT / "data" / "raw"
     output_folder.mkdir(parents=True, exist_ok=True)
-    output_path = output_folder / f"{safe_name}_companyfacts.json"
+    output_path = output_folder / f"{ticker}_companyfacts.json"
 
     with open(output_path, "w", encoding="utf-8") as file:
         json.dump(raw_data, file, indent=2)
     
 
 
-download_company_facts(get_cik("AAPL",headers),headers)
+download_company_facts(get_cik("AAPL",headers),headers,"AAPL")
 
 
 
