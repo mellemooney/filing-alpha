@@ -8,6 +8,10 @@ headers = {
     }
 
 #definitions
+
+#get_cik looks up a companys cik(cCentral Index Key) using its ticker symbol
+#by retrieiving the SEC's ticker to CIK map and searching for the requested ticker
+#returns the companys 10 digit CIK padded by leading zeros
 def get_cik(ticker,headers):
     ticker = ticker.upper()
     response = requests.get(
@@ -26,7 +30,9 @@ def get_cik(ticker,headers):
     raise ValueError(f"ticker '{ticker}' not found")
 
 
-
+#download_company_facts uses the SEC's EDGAR API to retrieve financial facts for the given cik argument
+#ticker is passed as an argument for the file naming portion of the code
+#the data is parsed from json and stores as a dict
 def download_company_facts(cik,headers,ticker):
     ticker = ticker.upper()
     url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
