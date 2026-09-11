@@ -2,6 +2,10 @@ import yfinance as yf
 from pathlib import Path
 
 #definitons
+
+#get_market_data takes in a ticker symbol and using yfinance library 
+#retrieves OHLC and volume data from 2015 to the present in csv format
+#downloads the data at data/raw/marketData
 def get_market_data(ticker):
     ticker = ticker.upper()
     market_data = yf.download(ticker, 
