@@ -48,7 +48,7 @@ def download_company_facts(cik,headers,ticker):
     PROJECT_ROOT = Path(__file__).resolve().parents[1]
     output_folder = PROJECT_ROOT / "data" / "raw" / "companyFacts"
     output_folder.mkdir(parents=True, exist_ok=True)
-    output_path = output_folder / f"{ticker}_companyfacts.json"
+    output_path = output_folder / f"{ticker}_companyFacts.json"
 
     with open(output_path, "w", encoding="utf-8") as file:
         json.dump(raw_data, file, indent=2)
@@ -56,6 +56,5 @@ def download_company_facts(cik,headers,ticker):
 
 ticker = input("Enter Ticker: ")
 download_company_facts(get_cik(ticker,headers),headers,ticker)
-
 
 

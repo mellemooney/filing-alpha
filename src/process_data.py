@@ -3,9 +3,8 @@ from datetime import date
 from pathlib import Path
 
 
+
 ticker = "AAPL"
-
-
 
 # finds prject folder a level above src
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -17,67 +16,143 @@ with open(file_path, "r", encoding="utf-8") as file:
 
 us_gaap = company_data["facts"]["us-gaap"]
 
-net_income = us_gaap["NetIncomeLoss"]
-
-records = net_income["units"]["USD"]
 
 
+#############
+#Definitions#
+#############
 
-#finds all instances of annual records and print total amount found
-annual_records = []
+#get_annual_records:
+#takes in us_gaap for a given company and then finds a specific metric(metric_tag)
+#within the us_gaap dict and returns all annual records after removing duplicates and 
+#sorting by end date, oldest first, newest last
+def get_annual_records(us_gaap, metric_tag):
+    records = us_gaap[metric_tag]["units"]["USD"]
 
-for record in records:
-    if "start" not in record or "end" not in record:
-        continue
+    annual_records = []
 
-    start = date.fromisoformat(record["start"])
-    end = date.fromisoformat(record["end"])
-    duration = (end - start).days
+    for record in records:
+        if "start" not in record or "end" not in record:
+            continue
 
-    if record["form"] == "10-K" and 350 <= duration <= 380:
-        annual_records.append(record)
+        start = date.fromisoformat(record["start"])
+        end = date.fromisoformat(record["end"])
+        duration = (end - start).days
 
-
-
-#sifts out duplicates by prioritizing the latest duplicate
-latest_by_period = {}
-
-for record in annual_records:
-    period = (record["start"], record["end"])
-
-    if period not in latest_by_period:
-        latest_by_period[period] = record
-
-    elif record["filed"] > latest_by_period[period]["filed"]:
-        latest_by_period[period] = record
+        if record["form"] == "10-K" and 350 <= duration <= 380:
+            annual_records.append(record)
 
 
+    latest_by_period = {}
+
+    for record in annual_records:
+        period = (record["start"], record["end"])
+
+        if period not in latest_by_period:
+            latest_by_period[period] = record
+
+        elif record["filed"] > latest_by_period[period]["filed"]:
+            latest_by_period[period] = record
+
+    return sorted(
+        latest_by_period.values(),
+        key=lambda record: record["end"]
+    )
 
 
-#sorts the remaining entries by end date
-annual_net_income = sorted(
-    latest_by_period.values(),
-    key=lambda record: record["end"]
-)
-print(f"Found {len(annual_net_income)} annual records")
+
+#index_by_period:
+#takes the list of records and indexes them by period 
+#(this function does seem a bit redundant since the 'latest_by_period' in the 'get_annual_records' function
+#is already keyed by period however in wanting tha function to return a single sorted list and not having
+#foreseen the need for this later on i am willing to leave it considering my datset is small)
+def index_by_period(records):
+    by_period = {}
+    for record in records:
+        period = (record['start'], record['end'])
+        by_period[period] = record
+    return by_period
+
+
+
+#year_to_year_change
+#
+def year_to_year_change(records):
+    for i in range(len(records)):
+        current = records[i]['val']
+        period_end = records[i]['end']
+
+        if i == 0:
+            print(f"{period_end} | {current:,.0f} | Growth: N/A")
+            continue
+
+        previous = records[i - 1]['val']
+
+        if previous <= 0:
+            growth_text = "N/A"
+        else:
+            growth = (current - previous) / previous * 100
+            growth_text = f"{growth:+.2f}%"
+
+        print(
+            f"{period_end} | {current:,.0f} | Growth: {growth_text}"
+        )
+
 
 
 #
-for i in range(len(annual_net_income)):
-    net_income = annual_net_income[i]["val"]
-    period_end = annual_net_income[i]["end"]
+#
+def print_profit_margins(
+    annual_net_income,
+    revenue_by_period,
+    operating_income__by_period
+):
 
-    if i == 0:
-        print(f"{period_end} | {net_income:,.0f} | Growth: N/Ahh")
-        continue
+    for record in annual_net_income[-5:]:
+        period = (record["start"], record["end"])
 
-    previous_income = annual_net_income[i - 1]["val"]
+        if period not in revenue_by_period or period not in operating_income__by_period:
+            print(f"{record['end']} | Missing matching data")
+            continue
 
-    if previous_income <= 0:
-        growth_text = "N/A"
-    else:
-        growth = (net_income - previous_income) / previous_income * 100
+        net_income = record['val']
+        revenue = revenue_by_period[period]['val']
+        operating_income = operating_income__by_period[period]['val']
 
-    print(
-        f"{period_end} | {net_income:,.0f} | {growth:+.2f}%"
-    )
+        if revenue <= 0:
+            print(f"{record['end']} | Margins unavailable")
+            continue
+
+        operating_margin = operating_income / revenue * 100
+        net_margin = net_income / revenue * 100
+
+        print(
+            f"{record['end']} | "
+            f"Operating margin: {operating_margin:.2f}% | "
+            f"Net margin: {net_margin:.2f}%")
+
+
+######
+#CODE#
+######
+
+annual_net_income = get_annual_records(
+    us_gaap,
+    "NetIncomeLoss"
+)
+income_by_period = index_by_period(annual_net_income)
+
+annual_revenue = get_annual_records(
+    us_gaap,
+    "RevenueFromContractWithCustomerExcludingAssessedTax"
+)
+revenue_by_period = index_by_period(annual_revenue)
+
+annual_operating_income = get_annual_records(
+    us_gaap,
+    "OperatingIncomeLoss"
+)
+operating_income__by_period = index_by_period(annual_operating_income)
+
+print_profit_margins(annual_net_income,revenue_by_period,operating_income__by_period)
+
