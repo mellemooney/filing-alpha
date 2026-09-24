@@ -1,20 +1,8 @@
-import json
+import json, csv
 from datetime import date
 from pathlib import Path
 
 
-
-ticker = "AAPL"
-
-# finds prject folder a level above src
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-
-file_path = PROJECT_ROOT / "data" / "raw" / "companyFacts" / f"{ticker}_companyFacts.json"
-
-with open(file_path, "r", encoding="utf-8") as file:
-    company_data = json.load(file)
-
-us_gaap = company_data["facts"]["us-gaap"]
 
 
 
@@ -102,11 +90,12 @@ def year_to_year_change(records):
 
 #
 #
-def print_profit_margins(
+def build_profit_margins(
     annual_net_income,
     revenue_by_period,
     operating_income__by_period
 ):
+    results = []
 
     for record in annual_net_income[-5:]:
         period = (record["start"], record["end"])
@@ -126,15 +115,60 @@ def print_profit_margins(
         operating_margin = operating_income / revenue * 100
         net_margin = net_income / revenue * 100
 
-        print(
-            f"{record['end']} | "
-            f"Operating margin: {operating_margin:.2f}% | "
-            f"Net margin: {net_margin:.2f}%")
+        row = {
+            "start": record['start'],
+            "end": record['end'],
+            "revenue": revenue,
+            "operating income": operating_income,
+            "net income": net_income,
+            "operating margin pct": operating_margin,
+            "net margin pct": net_margin,
+        }
+
+        results.append(row)
+
+        #print(
+        #    f"{record['end']} | "
+        #    f"Operating margin: {operating_margin:.2f}% | "
+        #    f"Net margin: {net_margin:.2f}%")
+    
+    return results
+
+
+
+#
+#
+def save_to_csv(summary,output_path):
+    output_path.parent.mkdir(parents=True,exist_ok=True)
+
+    with open(output_path, 'w', newline='', encoding='utf-8') as file:
+        writer = csv.DictWriter(
+            file,
+            fieldnames=list(summary[0].keys())
+        )
+
+        writer.writeheader()
+        writer.writerows(summary)
+
 
 
 ######
 #CODE#
 ######
+
+ticker = "AAPL"
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+file_path = PROJECT_ROOT / "data" / "raw" / "companyFacts" / f"{ticker}_companyFacts.json"
+
+output_path = PROJECT_ROOT / "data" / "processed" / f"{ticker}_annual_summary.csv"
+
+with open(file_path, "r", encoding="utf-8") as file:
+    company_data = json.load(file)
+
+us_gaap = company_data["facts"]["us-gaap"]
+
 
 annual_net_income = get_annual_records(
     us_gaap,
@@ -154,5 +188,8 @@ annual_operating_income = get_annual_records(
 )
 operating_income__by_period = index_by_period(annual_operating_income)
 
-print_profit_margins(annual_net_income,revenue_by_period,operating_income__by_period)
+
+summary = (build_profit_margins(annual_net_income,revenue_by_period,operating_income__by_period))
+
+save_to_csv(summary,output_path)
 
