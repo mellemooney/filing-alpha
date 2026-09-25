@@ -4,8 +4,6 @@ from pathlib import Path
 
 
 
-
-
 #############
 #Definitions#
 #############
@@ -123,6 +121,9 @@ def build_profit_margins(
             "net income": net_income,
             "operating margin pct": operating_margin,
             "net margin pct": net_margin,
+            "net income accession": record["accn"],
+            "revenue accession": revenue_by_period[period]["accn"],
+            "operating income accession": operating_income__by_period[period]["accn"],  
         }
 
         results.append(row)
@@ -186,10 +187,10 @@ annual_operating_income = get_annual_records(
     us_gaap,
     "OperatingIncomeLoss"
 )
-operating_income__by_period = index_by_period(annual_operating_income)
+operating_income_by_period = index_by_period(annual_operating_income)
 
 
-summary = (build_profit_margins(annual_net_income,revenue_by_period,operating_income__by_period))
+summary = build_profit_margins(annual_net_income,revenue_by_period,operating_income_by_period)
 
 save_to_csv(summary,output_path)
 
