@@ -21,5 +21,5 @@ def get_market_data(ticker):
 
     market_data.to_csv(output_path)
 
-ticker = input("Enter Ticker: ")
+ticker = input("Ticker: ").strip().upper()
 get_market_data(ticker)

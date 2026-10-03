@@ -1,13 +1,24 @@
 #imports
-import requests, json
+import requests, json, os
 from pathlib import Path
+from dotenv import load_dotenv
 
-#contants
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(PROJECT_ROOT / ".env")
+contact_email = os.getenv("SEC_CONTACT_EMAIL")
+if not contact_email or not contact_email.strip():
+    raise ValueError("Set SEC_CONTACT_EMAIL in your .env file.")
+
 headers = {
-        "User-Agent": "FilingAlpha : meadowsnull@gmail.com",
+        "User-Agent": f"FilingAlpha : {contact_email}",
     }
 
-#definitions
+
+#############
+#DEFINITIONS#
+#############
 
 #get_cik looks up a companys cik(cCentral Index Key) using its ticker symbol
 #by retrieiving the SEC's ticker to CIK map and searching for the requested ticker
@@ -16,7 +27,8 @@ def get_cik(ticker,headers):
     ticker = ticker.upper()
     response = requests.get(
         "https://www.sec.gov/files/company_tickers.json",
-        headers=headers
+        headers=headers,
+        timeout=30
     )
     response.raise_for_status()
 
@@ -38,7 +50,8 @@ def download_company_facts(cik,headers,ticker):
     url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
     response = requests.get(
             url,
-            headers=headers
+            headers=headers,
+            timeout=30
             )
     response.raise_for_status()
 
@@ -54,7 +67,14 @@ def download_company_facts(cik,headers,ticker):
         json.dump(raw_data, file, indent=2)
     
 
-ticker = input("Enter Ticker: ")
-download_company_facts(get_cik(ticker,headers),headers,ticker)
+######
+#CODE#
+######
+
+ticker = input("Ticker: ").strip().upper()
+
+cik = get_cik(ticker,headers)
+
+download_company_facts(cik,headers,ticker)
 
 

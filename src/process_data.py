@@ -62,39 +62,44 @@ def index_by_period(records):
 
 
 #year_to_year_change
-#
+#takes in teh records provided by get_annual_records and then calculates the growth from the previous 
+#year to the next and then returns a dict with keys being tuples with period start and end
+#and values being the growth from the previous year to that one
 def year_to_year_change(records):
+    by_period = {}
+
     for i in range(len(records)):
-        current = records[i]['val']
-        period_end = records[i]['end']
+        record = records[i]
+        period = (record["start"], record["end"])
+        growth = None
 
-        if i == 0:
-            print(f"{period_end} | {current:,.0f} | Growth: N/A")
-            continue
+        if i > 0:
+            previous_record = records[i - 1]
 
-        previous = records[i - 1]['val']
+            current_start = date.fromisoformat(record["start"])
+            previous_end = date.fromisoformat(previous_record["end"])
+            consecutive = (current_start - previous_end).days == 1
 
-        if previous <= 0:
-            growth_text = "N/A"
-        else:
-            growth = (current - previous) / previous * 100
-            growth_text = f"{growth:+.2f}%"
+            previous = previous_record["val"]
 
-        print(
-            f"{period_end} | {current:,.0f} | Growth: {growth_text}"
-        )
+            if consecutive and previous > 0:
+                current = record["val"]
+                growth = (current - previous) / previous * 100
+
+        by_period[period] = growth
+
+    return by_period
 
 
-
+#Build_annual_summary
 #
-#
-def build_profit_margins(
+def build_annual_summary(
     annual_net_income,
     revenue_by_period,
-    operating_income__by_period
+    operating_income__by_period,
+    growth_by_period,
 ):
     results = []
-
     for record in annual_net_income[-5:]:
         period = (record["start"], record["end"])
 
@@ -113,6 +118,7 @@ def build_profit_margins(
         operating_margin = operating_income / revenue * 100
         net_margin = net_income / revenue * 100
 
+        
         row = {
             "start": record['start'],
             "end": record['end'],
@@ -123,7 +129,8 @@ def build_profit_margins(
             "net margin pct": net_margin,
             "net income accession": record["accn"],
             "revenue accession": revenue_by_period[period]["accn"],
-            "operating income accession": operating_income__by_period[period]["accn"],  
+            "operating income accession": operating_income__by_period[period]["accn"],
+            "revenue growth": growth_by_period.get(period)  
         }
 
         results.append(row)
@@ -137,9 +144,13 @@ def build_profit_margins(
 
 
 
-#
-#
+#save_to_csv
+#takes in summary which is acquired from build_profit_margins and output_path and 
+#writes the summary to a csv file at the path stored in output_path
 def save_to_csv(summary,output_path):
+    if not summary:
+        raise ValueError("No annual results to save.")
+
     output_path.parent.mkdir(parents=True,exist_ok=True)
 
     with open(output_path, 'w', newline='', encoding='utf-8') as file:
@@ -157,7 +168,7 @@ def save_to_csv(summary,output_path):
 #CODE#
 ######
 
-ticker = "AAPL"
+ticker = input("Ticker: ").strip().upper()
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -171,11 +182,11 @@ with open(file_path, "r", encoding="utf-8") as file:
 us_gaap = company_data["facts"]["us-gaap"]
 
 
+
 annual_net_income = get_annual_records(
     us_gaap,
     "NetIncomeLoss"
 )
-income_by_period = index_by_period(annual_net_income)
 
 annual_revenue = get_annual_records(
     us_gaap,
@@ -190,7 +201,7 @@ annual_operating_income = get_annual_records(
 operating_income_by_period = index_by_period(annual_operating_income)
 
 
-summary = build_profit_margins(annual_net_income,revenue_by_period,operating_income_by_period)
+summary = build_annual_summary(annual_net_income,revenue_by_period,operating_income_by_period,year_to_year_change(annual_revenue))
 
 save_to_csv(summary,output_path)
 
