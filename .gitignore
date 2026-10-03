@@ -12,3 +12,6 @@ data/processed/
 
 #Notebooks and tests
 notebooks
+
+__pycache__/
+*.pyc

@@ -5,15 +5,7 @@ from dotenv import load_dotenv
 
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-load_dotenv(PROJECT_ROOT / ".env")
-contact_email = os.getenv("SEC_CONTACT_EMAIL")
-if not contact_email or not contact_email.strip():
-    raise ValueError("Set SEC_CONTACT_EMAIL in your .env file.")
 
-headers = {
-        "User-Agent": f"FilingAlpha : {contact_email}",
-    }
 
 
 #############
@@ -65,16 +57,25 @@ def download_company_facts(cik,headers,ticker):
 
     with open(output_path, "w", encoding="utf-8") as file:
         json.dump(raw_data, file, indent=2)
-    
-
-######
-#CODE#
-######
-
-ticker = input("Ticker: ").strip().upper()
-
-cik = get_cik(ticker,headers)
-
-download_company_facts(cik,headers,ticker)
 
 
+
+def download_data(ticker):
+    PROJECT_ROOT = Path(__file__).resolve().parents[1]
+    load_dotenv(PROJECT_ROOT / ".env")
+
+    contact_email = os.getenv("SEC_CONTACT_EMAIL")
+
+    if not contact_email or not contact_email.strip():
+        raise ValueError("Set SEC_CONTACT_EMAIL in your .env file.")
+
+    headers = {
+            "User-Agent": f"FilingAlpha : {contact_email}",
+        }
+
+    cik = get_cik(ticker,headers)
+    download_company_facts(cik,headers,ticker)
+
+if __name__ == "__main__":
+    ticker = input("Ticker: ").strip().upper()
+    download_data(ticker)

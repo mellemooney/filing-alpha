@@ -1,10 +1,10 @@
 # Filing Alpha - V 0.1
 
-- A python project that turns Apple's SEC financial data into annual and financial summary and charts using SEC data.
+- A Python tool that turns SEC financial data into annual summaries and charts.
 
-- Filing Alpha converts raw financial observations into a five-period summary, a CSV export, and charts. The project focuses on matching reporting periods, resolving repeated observations, and keeping results traceable to their source filings.
+- Enter a company ticker once to download its financial data, calculate revenue growth and profit margins, and save the results in a company-specific folder.
 
-Example
+## Example
 
 ![Apple annual revenue](docs/images/AAPL_revenue.png)
 
@@ -24,7 +24,22 @@ Example
 
 - Generates revenue and profit-margin charts.
 
-## Setup -  The instructions use windows powershell and python 3.11
+# Verified Companies
+The following companies produced five complete annual periods. Their saved financial values were checked against original SEC filings on October 2 2026.
+
+- Apple : AAPL
+- Microsoft : MSFT
+- Amazon : AMZN
+- Meta : META
+- Salesforce : CRM
+- Intel : INTC
+- AMD : AMD
+- Cisco : CSCO
+- Oracle : ORCL
+- Costco : COST
+
+## Setup 
+These instructions use windows powershell and python 3.11
 
     python -m venv .venv
     .\.venv\Scripts\Activate.ps1
@@ -36,35 +51,35 @@ Example
 - Before downloading SEC data, update the SEC_CONTACT_EMAIL value in the .env with your email.
 - The download script includes this email in its SEC request header.
 
-Start
-- Download Apple's Financial Data, when prompted enter "AAPL" for all input requests
-    ```
-    python src/sec_data.py
-    ```
+## Start
     
-- Build the Annual Summary
-    ```
-    python src/process_data.py
-    ```
-- Generate Charts
-    ```
-    python src/plot_data.py
-    ```
-    The downloader, processing and plotting scripts accepts other tickers, but their compatibility with the analysis is not guaranteed.
+    python src/main.py
+    
+The downloader, processing and plotting scripts accepts other tickers besides the verified ones, but their compatibility is not guaranteed.
 
-Additional Script
+The program will:
 
-- src/market_data.py downloads historical stock prices using yfinance. It is separate from the financial analysis and is not required to generate the summary or charts.
+1. Download the company’s SEC financial data.
 
-Generated Files
+2. Build its annual summary.
+
+3. Save the CSV and both charts.
+
+4. Display the charts.
+
+## Additional Script
+
+- src/market_data.py isnt ran under main.py, it downloads historical stock prices using yfinance. It is separate from the current capability of the financial analysis and is not required to generate the summary or charts.
+
+## Generated Files
 
 - Downloaded data and generated results are excluded from Git. The images in docs/images are saved examples; running the scripts does not update those copies.
 
 - The CSV contains reporting dates, financial values in USD, margins, revenue growth, and source accession numbers. Percentage values use percentage units: 6.43 means 6.43%.
 
-Scope and limitations
+## Scope and limitations
 
-- I built this version around Apple’s financial data. Other companies may use different financial tags, so changing the ticker alone might not work.
+- I originally built this version around Apple’s financial data since building a general tool with the goal of handling most companies exceeded my scope. Other companies may use different financial tags, so changing the ticker alone might not work, however i tested it with various other and came up with a list of 10 companies i verified the results for.
 
 - The code looks for annual records covering 350–380 days. This works for the Apple data used here, but may need adjustments for other reporting periods.
 
@@ -76,6 +91,15 @@ Scope and limitations
 
 - This project looks at historical financial performance. It does not predict stock prices or recreate exactly what information was available to investors at a past date.
 
-Tools
+## Running Individual Steps
+Each script can also be run separately and will prompt for a ticker:
+
+    python src/sec_data.py
+    python src/process_data.py
+    python src/plot_data.py
+
+Processing requires the downloaded data from sec_data, and plotting requires the generated summary that process_data creates.
+
+## Tools
 
 - Python, Requests, python-dotenv, Matplotlib, and Python’s built-in JSON and CSV modules. The optional market_data script uses yfinance.

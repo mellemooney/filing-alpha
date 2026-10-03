@@ -164,44 +164,48 @@ def save_to_csv(summary,output_path):
 
 
 
-######
-#CODE#
-######
+def process_data(ticker):
+    project_root = Path(__file__).resolve().parents[1]
 
-ticker = input("Ticker: ").strip().upper()
+    file_path = (
+        project_root / "data" / "raw" / "companyFacts"
+        / f"{ticker}_companyFacts.json"
+    )
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+    output_path = (
+        project_root / "data" / "processed" / ticker
+        / f"{ticker}_annual_summary.csv"
+    )
 
-file_path = PROJECT_ROOT / "data" / "raw" / "companyFacts" / f"{ticker}_companyFacts.json"
+    with open(file_path, "r", encoding="utf-8") as file:
+        company_data = json.load(file)
 
-output_path = PROJECT_ROOT / "data" / "processed" / f"{ticker}_annual_summary.csv"
+    us_gaap = company_data["facts"]["us-gaap"]
 
-with open(file_path, "r", encoding="utf-8") as file:
-    company_data = json.load(file)
+    annual_net_income = get_annual_records(us_gaap, "NetIncomeLoss")
 
-us_gaap = company_data["facts"]["us-gaap"]
+    annual_revenue = get_annual_records(
+        us_gaap,
+        "RevenueFromContractWithCustomerExcludingAssessedTax"
+    )
+
+    annual_operating_income = get_annual_records(
+        us_gaap,
+        "OperatingIncomeLoss"
+    )
+
+    summary = build_annual_summary(
+        annual_net_income,
+        index_by_period(annual_revenue),
+        index_by_period(annual_operating_income),
+        year_to_year_change(annual_revenue)
+    )
+
+    save_to_csv(summary, output_path)
+
+    return output_path
 
 
-
-annual_net_income = get_annual_records(
-    us_gaap,
-    "NetIncomeLoss"
-)
-
-annual_revenue = get_annual_records(
-    us_gaap,
-    "RevenueFromContractWithCustomerExcludingAssessedTax"
-)
-revenue_by_period = index_by_period(annual_revenue)
-
-annual_operating_income = get_annual_records(
-    us_gaap,
-    "OperatingIncomeLoss"
-)
-operating_income_by_period = index_by_period(annual_operating_income)
-
-
-summary = build_annual_summary(annual_net_income,revenue_by_period,operating_income_by_period,year_to_year_change(annual_revenue))
-
-save_to_csv(summary,output_path)
-
+if __name__ == "__main__":
+    ticker = input("Ticker: ").strip().upper()
+    process_data(ticker)
