@@ -1,4 +1,4 @@
-# Filing Alpha - V 0.1
+# Filing Alpha - V 1.0
 
 - A Python tool that turns SEC financial data into annual summaries and charts.
 
@@ -54,8 +54,6 @@ These instructions use windows powershell and python 3.11
 ## Start
     
     python src/main.py
-    
-The downloader, processing and plotting scripts accepts other tickers besides the verified ones, but their compatibility is not guaranteed.
 
 The program will:
 
@@ -79,7 +77,7 @@ The program will:
 
 ## Scope and limitations
 
-- I originally built this version around Apple’s financial data since building a general tool with the goal of handling most companies exceeded my scope. Other companies may use different financial tags, so changing the ticker alone might not work, however i tested it with various other and came up with a list of 10 companies i verified the results for.
+- I originally built this version around Apple’s financial data since building a general tool with the goal of handling most companies exceeded my scope. Other companies may use different financial tags, so changing the ticker alone might not work, however I tested it with various other and came up with a list of 10 companies I verified the results for.
 
 - The code looks for annual records covering 350–380 days. This works for the Apple data used here, but may need adjustments for other reporting periods.
 
